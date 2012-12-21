@@ -12,6 +12,8 @@ class FingerprintTask extends SourceTask {
 
     @Input @Optional def fingerprintLength
 
+    @Input def replaceNameInFiles
+
     { // add validator for length
         addValidator({ task, messages ->
             if (fingerprintLength != null &&
