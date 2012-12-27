@@ -58,7 +58,6 @@ class FingerprintTask extends SourceTask {
                 filenameMap["$relativePath$sourceFile.file.name"] = "$relativePath$outputFile"
             }
         }
-        println filenameMap
         // only try to replace names if we actually fingerprinted some files
         if (filenameMap.size() > 0) {
             replaceInFiles.visit { replaceFile ->
