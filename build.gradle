@@ -1,5 +1,17 @@
 apply plugin: 'groovy'
-apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'signing'
+
+defaultTasks 'clean', 'build'
+
+version = '0.1'
+group = 'com.reuters'
+ext.archivesBaseName = 'gradle-fingerprint-plugin'
+ext.isSnapshot = version.endsWith("-SNAPSHOT")
+
+repositories {
+    mavenCentral()
+}
 
 repositories {
     mavenCentral()
