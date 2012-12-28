@@ -35,7 +35,7 @@ task fingerprint(type: com.reuters.gradle.FingerprintTask) {
     // replace references to javascript and css files in html and jsp files
     replaceInFiles = fileTree(dir: 'src/main/webapp/WEB-INF/pages', include: ['**/*.html', '**/*.jsp'])
     replacedDestDir = file('build/fingerprint/pages')
-    fingerprintLength = 10 // length of the checksum to add to file name valid values are 8-20 or default is 8
+    fingerprintLength = 10
 }
 
 // configure war task to take fingerprinted files and updated jsp and html files
