@@ -1,13 +1,13 @@
-# Gradle Fingerprint Plugin 
+# Gradle Fingerprint Plugin
 
 A gradle plugin to add a file's checksum to its name and update references to the file with the new name.
-For example: 
+For example:
 * A javascript file *foo.js* will be renamed to *foo-79aa9453.js*.
 * A referernce to *foo.js* in *bar.html* like `<script src="/js/foo.js"></script>` will be replaced with `<script src="/js/foo-79aa9453.js"></script>`
 
 For more information about assets fingerprinting and caching see Google's PageSpeed caching [documentation](https://developers.google.com/speed/docs/best-practices/caching).
 
-### Usage 
+### Usage
 If we want to fingerprint our javascript and css files and we have a the following Java webapp project strucutre:
 * *javascript* files are under: src/main/webapp/js
 * *css* files are under src/main/webapp/css
@@ -22,7 +22,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.reuters:gradle-fingerprint-plugin:0.2'
+        classpath 'com.reuters:gradle-fingerprint-plugin:0.3'
     }
 }
 
