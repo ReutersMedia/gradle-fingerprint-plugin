@@ -4,7 +4,7 @@ apply plugin: 'signing'
 
 defaultTasks 'clean', 'build'
 
-version = '0.1'
+version = '0.2'
 group = 'com.reuters'
 ext.archivesBaseName = 'gradle-fingerprint-plugin'
 ext.isSnapshot = version.endsWith("-SNAPSHOT")

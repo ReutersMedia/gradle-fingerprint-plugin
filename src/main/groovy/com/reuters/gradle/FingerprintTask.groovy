@@ -10,19 +10,19 @@ import org.gradle.api.tasks.Optional
 
 class FingerprintTask extends SourceTask {
 
-    public static final String FINGERPRINT_LENGHT_OUTSIDE_RANAGE_MESSAGE =
+    public static final String FINGERPRINT_LENGHT_OUTSIDE_RANGE_MESSAGE =
         'fingerprintLength should be between 8 and 20'
 
     @OutputDirectory def destinationDir
     @Input @Optional def fingerprintLength
-    @Input FileTree replaceInFiles
-    @Input @Optional def replacedDestDir
+    @Input @Optional FileTree replaceInFiles
+    @OutputDirectory @Optional def replacedDestDir
 
     { // add validator for length
         addValidator({ task, messages ->
             if (fingerprintLength != null &&
                 (!fingerprintLength instanceof Integer || fingerprintLength < 8 || fingerprintLength > 20)) {
-                messages.add(FINGERPRINT_LENGHT_OUTSIDE_RANAGE_MESSAGE)
+                messages.add(FINGERPRINT_LENGHT_OUTSIDE_RANGE_MESSAGE)
             }
         } as TaskValidator)
     }
@@ -58,8 +58,8 @@ class FingerprintTask extends SourceTask {
                 filenameMap["$relativePath$sourceFile.file.name"] = "$relativePath$outputFile"
             }
         }
-        // only try to replace names if we actually fingerprinted some files
-        if (filenameMap.size() > 0) {
+        // only try to replace names if we defined which files to replace in and we actually fingerprinted some files
+        if (replaceInFiles != null && filenameMap.size() > 0) {
             replaceInFiles.visit { replaceFile ->
                 if (!replaceFile.directory) {
                     def contents = replaceFile.file.text

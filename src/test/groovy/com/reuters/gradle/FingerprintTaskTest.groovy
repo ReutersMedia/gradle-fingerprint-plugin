@@ -1,19 +1,15 @@
 package com.reuters.gradle
 
 import static org.junit.Assert.assertTrue
+import static org.junit.Assert.assertFalse
 
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.api.Project
 import org.gradle.api.file.FileTree
 import org.junit.Test
-import org.junit.Rule
-import org.junit.rules.TemporaryFolder
 
 class FingerprintTaskTest {
-    @Rule
-    public TemporaryFolder tempDir = new TemporaryFolder()
-
-    public Project project = ProjectBuilder.builder().build()
+    private Project project = ProjectBuilder.builder().build()
 
     @Test
     public void canAddTaskToProject() {
@@ -23,11 +19,30 @@ class FingerprintTaskTest {
 
     @Test
     public void fingerprintLenghNotInRange() {
-        def (resorucesDir, task) = createAndConfigureTask('**/*.txt', '', '**/*.html', '', 4)
+        def (resorucesDir, task) = createAndConfigureTask('**/*.txt', '', null, null, 4)
         List<String> messages = []
         task.validators*.validate(task,messages)
         assertTrue(messages.size == 1)
-        messages.contains(FingerprintTask.FINGERPRINT_LENGHT_OUTSIDE_RANAGE_MESSAGE)
+        messages.contains(FingerprintTask.FINGERPRINT_LENGHT_OUTSIDE_RANGE_MESSAGE)
+    }
+
+    @Test
+    public void fingerprintImagesWithoutReplaceInFiles() {
+        def fingerprintLength = 10
+        def (resourcesDir, task) = createAndConfigureTask(['**/*.png', '**/*.gif'], 'expected/**/*', null, null,
+            fingerprintLength)
+        task.doFingerprint()
+
+        // verify images
+        verifyChecksumFile("$resourcesDir/img", "$task.destinationDir.path/img", 'glyphicons-halflings-white.png',
+            fingerprintLength)
+        verifyChecksumFile("$resourcesDir/img", "$task.destinationDir.path/img", 'glyphicons-halflings.png',
+            fingerprintLength)
+        verifyChecksumFile("$resourcesDir/img/gifs", "$task.destinationDir.path/img/gifs", 'transparent.gif',
+            fingerprintLength)
+        // verify no other files created
+        assertFalse(new File("$task.destinationDir.path/css/print.css").exists())
+        assertFalse(new File("$task.destinationDir.path/css/style.css").exists())
     }
 
     @Test
@@ -38,17 +53,17 @@ class FingerprintTaskTest {
         task.doFingerprint()
 
         // verify images
-        verifyChecksumFile(resourcesDir + '/img', task.destinationDir.path + '/img', 'glyphicons-halflings-white.png',
+        verifyChecksumFile("$resourcesDir/img", "$task.destinationDir.path/img", 'glyphicons-halflings-white.png',
             fingerprintLength)
-        verifyChecksumFile(resourcesDir + '/img', task.destinationDir.path + '/img', 'glyphicons-halflings.png',
+        verifyChecksumFile("$resourcesDir/img", "$task.destinationDir.path/img", 'glyphicons-halflings.png',
             fingerprintLength)
-        verifyChecksumFile(resourcesDir + '/img/gifs', task.destinationDir.path + '/img/gifs',
-            'transparent.gif', fingerprintLength)
+        verifyChecksumFile("$resourcesDir/img/gifs", "$task.destinationDir.path/img/gifs", 'transparent.gif',
+            fingerprintLength)
         // verify references in css files
-        assertTrue(doFilesHaveSameContent(resourcesDir + '/expected/css/print.css',
-            task.destinationDir.path + '/css/print.css'))
-        assertTrue(doFilesHaveSameContent(resourcesDir + '/expected/css/style.css',
-            task.destinationDir.path + '/css/style.css'))
+        assertTrue(doFilesHaveSameContent("$resourcesDir/expected/css/print.css",
+            "$task.destinationDir.path/css/print.css"))
+        assertTrue(doFilesHaveSameContent("$resourcesDir/expected/css/style.css",
+            "$task.destinationDir.path/css/style.css"))
     }
 
     @Test
@@ -59,37 +74,37 @@ class FingerprintTaskTest {
         task.doFingerprint()
 
         // verify images
-        verifyChecksumFile(resourcesDir + '/js', task.destinationDir.path + '/js', 'jquery.js',
+        verifyChecksumFile("$resourcesDir/js", "$task.destinationDir.path/js", 'jquery.js', fingerprintLength)
+        verifyChecksumFile("$resourcesDir/js", "$task.destinationDir.path/js", 'bootstrap.js', fingerprintLength)
+        verifyChecksumFile("$resourcesDir/js/min", "$task.destinationDir.path/js/min", 'jquery.min.js',
             fingerprintLength)
-        verifyChecksumFile(resourcesDir + '/js', task.destinationDir.path + '/js', 'bootstrap.js',
-            fingerprintLength)
-        verifyChecksumFile(resourcesDir + '/js/min', task.destinationDir.path + '/js/min', 'jquery.min.js',
-            fingerprintLength)
-        verifyChecksumFile(resourcesDir + '/js/min', task.destinationDir.path + '/js/min', 'bootstrap.min.js',
+        verifyChecksumFile("$resourcesDir/js/min", "$task.destinationDir.path/js/min", 'bootstrap.min.js',
             fingerprintLength)
         // verify references in html files
-        assertTrue(doFilesHaveSameContent(resourcesDir + '/expected/pages/index.html',
-            task.destinationDir.path + '/pages/index.html'))
-        assertTrue(doFilesHaveSameContent(resourcesDir + '/expected/pages/min/other.html',
-            task.destinationDir.path + '/pages/min/other.html'))
+        assertTrue(doFilesHaveSameContent("$resourcesDir/expected/pages/index.html",
+            "$task.destinationDir.path/pages/index.html"))
+        assertTrue(doFilesHaveSameContent("$resourcesDir/expected/pages/min/other.html",
+            "$task.destinationDir.path/pages/min/other.html"))
     }
 
     def createAndConfigureTask(sourceInclude, sourceExclude, replaceFilesInclude, replaceFilesExclude,
         fingerprintLength) {
-
         def task = project.task('fingerprint', type: FingerprintTask)
         def cssResource = this.getClass().getResource('/css').toString() - 'file:'
         def resourcesDir = cssResource - '/css'
         def buildDir = resourcesDir - '/resources/test'
-        buildDir = buildDir + '/output'
+        buildDir = "$buildDir/output"
+        project.ant.delete(dir: buildDir)
         new File(buildDir).mkdirs()
         task.source = project.fileTree(dir: resourcesDir, include: sourceInclude, exclude: sourceExclude)
         task.destinationDir = project.file(buildDir)
         if (fingerprintLength > 0 ) {
             task.fingerprintLength = fingerprintLength
         }
-        task.replaceInFiles = project.fileTree(dir: resourcesDir , include: replaceFilesInclude,
-            exclude: replaceFilesExclude)
+        if (replaceFilesInclude != null) {
+            task.replaceInFiles = project.fileTree(dir: resourcesDir , include: replaceFilesInclude,
+                exclude: replaceFilesExclude)
+        }
         return [resourcesDir, task]
     }
 
@@ -111,12 +126,12 @@ class FingerprintTaskTest {
     }
 
     def doFilesHaveSameContent(fileA, fileB) {
-        def inFileA = [:]
-        new File(fileA).eachLine {
-            inFileA.put(it, null)
+        def fileAContent = [:]
+        new File(fileA).eachLine { line, index ->
+            fileAContent.put("$index-$line", index)
         }
-        new File(fileB).eachLine {
-            if(!inFileA.containsKey(it)) {
+        new File(fileB).eachLine { line, index ->
+            if(fileAContent["$index-$line"] != index) {
                 return false;
             }
         }
