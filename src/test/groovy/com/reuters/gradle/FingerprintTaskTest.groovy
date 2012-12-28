@@ -18,12 +18,18 @@ class FingerprintTaskTest {
     }
 
     @Test
-    public void fingerprintLenghNotInRange() {
+    public void fingerprintLengthNotInRange() {
         def (resorucesDir, task) = createAndConfigureTask('**/*.txt', '', null, null, 4)
         List<String> messages = []
         task.validators*.validate(task,messages)
         assertTrue(messages.size == 1)
-        messages.contains(FingerprintTask.FINGERPRINT_LENGHT_OUTSIDE_RANGE_MESSAGE)
+        assertTrue(messages.contains(FingerprintTask.FINGERPRINT_LENGHT_OUTSIDE_RANGE_MESSAGE))
+    }
+
+    @Test
+    public void fingerprintDefaultLength() {
+        def (resorucesDir, task) = createAndConfigureTask('**/*.txt', '', null, null, -1)
+        assertTrue(task.fingerprintLength == FingerprintTask.FINGERPRINT_DEFAULT_LENGTH)
     }
 
     @Test

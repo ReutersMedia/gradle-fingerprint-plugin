@@ -10,8 +10,8 @@ import org.gradle.api.tasks.Optional
 
 class FingerprintTask extends SourceTask {
 
-    public static final String FINGERPRINT_LENGHT_OUTSIDE_RANGE_MESSAGE =
-        'fingerprintLength should be between 8 and 20'
+    public static final String FINGERPRINT_LENGHT_OUTSIDE_RANGE_MESSAGE = 'fingerprintLength should be between 8 and 20'
+    public static final int FINGERPRINT_DEFAULT_LENGTH = 8
 
     @OutputDirectory def destinationDir
     @Input @Optional def fingerprintLength
@@ -35,6 +35,10 @@ class FingerprintTask extends SourceTask {
         replacedDestDir != null ? project.file(replacedDestDir) : destinationDir
     }
 
+    int getFingerprintLength() {
+        fingerprintLength ?: FINGERPRINT_DEFAULT_LENGTH
+    }
+
     @TaskAction
     def doFingerprint() {
         // sort files by path+name length so we first match the longest ones
@@ -49,8 +53,7 @@ class FingerprintTask extends SourceTask {
             if (!sourceFile.directory) {
                 def checksumProperty = "$sourceFile.file.absolutePath-checksum"
                 project.ant.checksum(file: sourceFile.file, algorithm: 'SHA', property: checksumProperty)
-                def checksum = fingerprintLength ? project.ant.properties[checksumProperty][1..fingerprintLength] :
-                    project.ant.properties[checksumProperty]
+                def checksum = project.ant.properties[checksumProperty][0..<fingerprintLength]
                 def outputFile = buildOutputFilename(sourceFile.file, checksum)
                 def relativePath = sourceFile.relativePath.replaceLastName('')
                 project.ant.copyfile(src: sourceFile.file.absolutePath,
